@@ -17,35 +17,25 @@ random_generator.generate_random_numbers.argtypes = [
 ]
 random_generator.generate_random_numbers.restype = ctypes.POINTER(ctypes.c_double)
 
-nn = ctypes.CDLL('./nn.so')
-nn.find_nearest_neighbour_dist.argtypes = [
-    ctypes.POINTER(ctypes.c_double),
-    ctypes.POINTER(ctypes.c_double),
-    ctypes.POINTER(ctypes.c_int),
-    ctypes.c_int,
-    ctypes.c_int,
-]
-
-nn_dist = ctypes.CDLL('./nn_dist.so')  # Replace with the actual library name
+nn_dist = ctypes.CDLL('./nn_dist.so')
 
 nn_dist.calculate_core_dist.argtypes = [
-    ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(ctypes.c_double)))),  # Input data
-    ctypes.POINTER(ctypes.POINTER(ctypes.c_int)),  # Number of elements in innermost lists
-    ctypes.POINTER(ctypes.c_int),  #
-    ctypes.c_int,  # Number of outer lists
+    ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(ctypes.c_double)))), 
+    ctypes.POINTER(ctypes.POINTER(ctypes.c_int)), 
+    ctypes.POINTER(ctypes.c_int),  
+    ctypes.c_int, 
     ctypes.c_int,
     ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), 
     ctypes.c_int,
     ctypes.c_int,
     ctypes.c_int
 ]
-nn_dist.calculate_core_dist.restype = ctypes.c_double
+
+nn_dist.calculate_core_dist.restype = ctypes.POINTER(ctypes.c_double)
 
 
 def generate_random_planes(num_hashtables, hash_size, input_dim):
-    # Call the C function
     random_numbers_ptr = random_generator.generate_random_numbers(ctypes.c_int(num_hashtables), ctypes.c_int(hash_size), ctypes.c_int(input_dim))
-    # Convert the C array to a NumPy array
     random_numbers = np.ctypeslib.as_array(random_numbers_ptr, shape=(num_hashtables, hash_size, input_dim))
     
     return random_numbers
@@ -84,9 +74,23 @@ class LSHash(object):
             num_bins.append(len(temp))
             dict_list.append(temp)
 
+        max_arr = [v for n in num_elements_ for v in n]
+        max_arr = int(np.percentile(max_arr, 98))
+
+        # print(temp, np.percentile(temp, 100))
+
+        max_arr -= 1
+        for i in range(6):  # Perform a maximum of 6 iterations for a 32-bit integer
+            max_arr |= max_arr >> (2 ** i)
+
+        max_arr += 1
+
+        print('dma size', max_arr)
+
         n_list = len(dict_list)
 
         c_input_data = (ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(ctypes.c_double))) * n_list)()
+        # c_input_data = (ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(ctypes.c_double))) * n_list)()
         num_inner_lists = (ctypes.c_int * n_list)()
         num_elements = (ctypes.POINTER(ctypes.c_int) * n_list)()
         
@@ -94,13 +98,18 @@ class LSHash(object):
             num_inner_lists[i] = num_bins[i]
             num_elements[i] = (ctypes.c_int * num_bins[i])()
             c_input_data[i] = (ctypes.POINTER(ctypes.POINTER(ctypes.c_double)) * num_bins[i])()
+            # c_input_data[i] = (ctypes.POINTER(ctypes.POINTER(ctypes.c_double)) * num_bins[i])()
             
             for j, inner_list in enumerate(outer_list):
                 num_elements[i][j] = num_elements_[i][j]
                 c_input_data[i][j] = (ctypes.POINTER(ctypes.c_double) * num_elements_[i][j])()
+                # c_input_data[i][j] = (ctypes.POINTER(ctypes.c_double) * num_elements_[i][j])()
                 
                 for k, arr in enumerate(inner_list):
                     c_input_data[i][j][k] = arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+                    # c_input_data[i][j][k] = (ctypes.c_double * self.input_dim)()
+                    # for l, a in enumerate(arr):
+                    #     c_input_data[i][j][k][l] = a #ctypes.c_double(a)
 
         c_array = (ctypes.POINTER(ctypes.c_double) * len(self.input_points))()
         for i, row in enumerate(self.input_points):
@@ -108,14 +117,15 @@ class LSHash(object):
 
 ########## FIND BEST VALUES FOR MAX_NEIGHBOUR, HASH_TABLE, HYPERPLANE
 # Speed depends on max neigh for C dym alloc
-        result = nn_dist.calculate_core_dist(c_input_data, num_elements, num_inner_lists, ctypes.c_int(n_list), ctypes.c_int(self.input_dim), c_array, ctypes.c_int(len(self.input_points)), ctypes.c_int(2048), ctypes.c_int(num_results))
+        result_ptr = nn_dist.calculate_core_dist(c_input_data, num_elements, num_inner_lists, ctypes.c_int(n_list), ctypes.c_int(self.input_dim), c_array, ctypes.c_int(len(self.input_points)), ctypes.c_int(max_arr), ctypes.c_int(num_results))
 
-        print(result)
+        results = np.ctypeslib.as_array(result_ptr, shape=(len(self.input_points),))
 
+        return results
 
+        # print(result)
 
-        output = {}
-        
+        # output = {}
         # candidates = defaultdict(set)
 
         # for table in self.hash_tables:
@@ -123,22 +133,6 @@ class LSHash(object):
         #         temp = list(map(tuple, values))
         #         for v in values:
         #             candidates[tuple(v)].update(temp)
-
-        # n_keys = len(candidates)
-        # data_points = list(itertools.chain.from_iterable(candidates.keys()))
-
-        # neighbours = []
-        # n_neighbours = [None] * n_keys
-
-        # for i, values in enumerate(candidates.values()):
-        #     neighbours.extend(list(itertools.chain.from_iterable(values)))
-        #     n_neighbours[i] = len(values)
-
-        # data_points_c = (ctypes.c_double * (n_keys * self.input_dim))(*data_points)
-        # neighbours_c = (ctypes.c_double * (len(neighbours)))(*neighbours)
-        # n_neighbours_c = (ctypes.c_int * n_keys)(*n_neighbours)
-
-        # nn.find_nearest_neighbour_dist(data_points_c, neighbours_c, n_neighbours_c, ctypes.c_int(n_keys), ctypes.c_int(self.input_dim))
 
         # for point, neighbours in candidates.items():
         #     p = np.array(point)
@@ -152,7 +146,7 @@ class LSHash(object):
         #         elif v < -heap[0]:
         #             heapq.heappushpop(heap, -v)
 
-        #     output[point] = -heap[0]
+        #     output[point] = np.sqrt(-heap[0])
 
         return output
 

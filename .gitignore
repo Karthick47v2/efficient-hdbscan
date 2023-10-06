@@ -16,6 +16,12 @@
 *.gch
 *.pch
 
+# venv
+venv
+
+# Caches
+__pycache__
+
 # Libraries
 *.lib
 *.a
@@ -50,3 +56,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+build
+
+.vscode/
+report.txt
+.DS_Store

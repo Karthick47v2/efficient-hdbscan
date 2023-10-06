@@ -21,7 +21,7 @@ double* generate_random_numbers(int num_hashtables, int hash_size, int input_dim
     
     // Fill the array with random values between 0 and 1
     for (int i = 0; i < total_elements; i++) {
-        random_numbers[i] = (rand() * 10.0 / (double) RAND_MAX) - 5.0;
+        random_numbers[i] = (rand() * 20.0 / (double) RAND_MAX) - 10.0;
     }
     
     return random_numbers;
