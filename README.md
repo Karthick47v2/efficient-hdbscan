@@ -1,5 +1,7 @@
 # parallel-boruvka
 
+# Test with Gaussian Random Noise
+
 > Graph test data available at [here](https://algs4.cs.princeton.edu/43mst/).
 
 Sequential - Without optimization - 1,000,000 vertex - 5.73 seconds
