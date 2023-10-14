@@ -1,42 +1,76 @@
+/**
+ * @file quickselect.c
+ * @author Karthick T. Sharma
+ * @brief Select kth minimum value from array.
+ *
+ * @date 2022-12-26
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
 #include "quickselect.h"
+#include "stdio.h"
 
-#include <stdio.h>
-
-void swap(double *a, double *b) {
-    int temp = *a;
+/**
+ * @brief Swap variables.
+ *
+ * @param a Variable to be swapped.
+ * @param b Variable to be swapped.
+ */
+void swap(double *a, double *b)
+{
+    double temp = *a;
     *a = *b;
     *b = temp;
 }
 
-int partition(double* array, int low, int high) {
-    double pivot = array[high];
+/**
+ * @brief Partition the array by pivot.
+ *
+ * Find kth smallest element by only sorting partial array using partitioning until
+ * kth elements comes as lower index.
+ *
+ * @param arr Array to be partitioned.
+ * @param low lower index range.
+ * @param high higer index range.
+ * @return int lower index range after partitioned.
+ */
+int partition(double *arr, int low, int high)
+{
+    double pivot = arr[high];
     int i = low - 1;
 
-    for (int j = low; j <= high - 1; j++) {
-        if (array[j] < pivot) { //////////////////////// TODO: CHECK IF ITS OK
+    for (int j = low; j <= high - 1; j++)
+    {
+        if (arr[j] < pivot)
+        {
             i++;
-            swap(&array[i], &array[j]);
+            swap(&arr[i], &arr[j]);
         }
     }
 
-    // Swap array[i+1] and array[high] (pivot)
-    swap(&array[i + 1], &array[high]);
+    // Swap arr[i+1] and arr[high] (pivot)
+    swap(&arr[i + 1], &arr[high]);
 
     return i + 1;
 }
 
+double quick_select(double *arr, int low, int high, int k)
+{
+    while (low <= high)
+    {
+        int pivot_idx = partition(arr, low, high);
 
-double quickSelect(double* array, int low, int high, int k) {
-    while (low <= high) {
-        int pivotIndex = partition(array, low, high);
-
-        if (k == pivotIndex)
-            return array[pivotIndex];
-        else if (k < pivotIndex)
-            high = pivotIndex - 1;
+        if (k == pivot_idx)
+        {
+            return arr[pivot_idx];
+        }
+        else if (k < pivot_idx)
+            high = pivot_idx - 1;
         else
-            low = pivotIndex + 1;
+            low = pivot_idx + 1;
     }
 
-    return array[low];
+    return arr[low];
 }

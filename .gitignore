@@ -47,6 +47,7 @@ __pycache__
 *.su
 *.idb
 *.pdb
+*.prof
 
 # Kernel Module Compile Results
 *.mod*
