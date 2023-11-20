@@ -12,7 +12,7 @@ from time import time
 
 if __name__ == '__main__':
     X, y = datasets.make_blobs(
-        n_samples=10000, n_features=100, centers=10, cluster_std=2.5, random_state=42)
+        n_samples=1000, n_features=100, centers=10, cluster_std=2.5, random_state=42)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.01, random_state=42)
 
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     lsh = LSHash(h, len(X_train[0]), n_t)  # h*3
     # lsh = LSHash(1, len(X_train[0]), 10)
     lsh.add_points(X_train)
-    dist = lsh.nn_dist(K)
+    dist = lsh.calc_core_dist(K)
     t = time()
 
     print('lsh', t-s)
@@ -85,10 +85,10 @@ if __name__ == '__main__':
 
     # lsh = LSHash(h, len(X_train[0]), n_t)
     # lsh.add_points(X_train)
-    # dist = lsh.nn_dist(K)
+    # dist = lsh.calc_core_dist(K)
 
     # def func():
-    #     dist = lsh.nn_dist(K)
+    #     dist = lsh.calc_core_dist(K)
 
     # cProfile.run('func()')
 

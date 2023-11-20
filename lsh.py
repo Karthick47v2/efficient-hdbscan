@@ -83,7 +83,7 @@ class LSHash(object):
             # print(len(table))
             # print(list(map(len, table.values())))
 
-    def nn_dist(self, num_results=0):
+    def calc_core_dist(self, num_results=0):
         if num_results == 0:
             return
 
@@ -96,7 +96,6 @@ class LSHash(object):
             num_elements_.append(list(map(len, temp)))
             num_bins.append(len(temp))
             dict_list.append(temp)
-
 
         max_arr = [v for n in num_elements_ for v in n]
         max_arr = int(np.percentile(max_arr, 80)) * self.num_hashtables
@@ -111,7 +110,6 @@ class LSHash(object):
         print('dma size', max_arr)
 
         n_list = len(dict_list)
-
 
         c_input_data = (ctypes.POINTER(ctypes.POINTER(
             ctypes.POINTER(ctypes.c_double))) * n_list)()

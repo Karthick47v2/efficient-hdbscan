@@ -64,13 +64,13 @@ void add_neighbor(struct Neighbours *neighbours, double data_point[])
         neighbours->data_points = temp;
     }
 
-    // for (int i = 0; i < neighbours->search_stop_idx; i++)
-    // {
-    //     if (are_arrays_eq(neighbours->data_points[i], data_point, neighbours->dims))
-    //     {
-    //         return;
-    //     }
-    // }
+    for (int i = 0; i < neighbours->search_stop_idx; i++)
+    {
+        if (are_arrays_eq(neighbours->data_points[i], data_point, neighbours->dims))
+        {
+            return;
+        }
+    }
     memcpy(neighbours->data_points[neighbours->num_neighbours], data_point, neighbours->dims * sizeof(double));
     neighbours->num_neighbours++;
 }

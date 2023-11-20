@@ -56,7 +56,7 @@ int partition(double *arr, int low, int high)
     return i + 1;
 }
 
-double quick_select(double *arr, int low, int high, int k)
+int quick_select(double *arr, int low, int high, int k)
 {
     while (low <= high)
     {
@@ -64,7 +64,7 @@ double quick_select(double *arr, int low, int high, int k)
 
         if (k == pivot_idx)
         {
-            return arr[pivot_idx];
+            return pivot_idx;
         }
         else if (k < pivot_idx)
             high = pivot_idx - 1;
@@ -72,5 +72,5 @@ double quick_select(double *arr, int low, int high, int k)
             low = pivot_idx + 1;
     }
 
-    return arr[low];
+    return low;
 }

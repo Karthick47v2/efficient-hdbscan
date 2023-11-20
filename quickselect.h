@@ -19,8 +19,8 @@
  * @param low Left index range.
  * @param high Right index range.
  * @param k Rank of element being sought.
- * @return double
+ * @return int
  */
-double quick_select(double *array, int low, int high, int k);
+int quick_select(double *array, int low, int high, int k);
 
 #endif
