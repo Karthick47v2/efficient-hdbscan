@@ -11,7 +11,6 @@ from sklearn import datasets
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
-from collections import Counter
 from time import time
 
 hdb_c_extension = ctypes.CDLL('./hdb.so')
@@ -99,7 +98,7 @@ sh = time()
 clusterer = hdbscan.HDBSCAN(min_cluster_size=k_nearest_neighbors_value,
                             min_samples=k_nearest_neighbors_value, match_reference_implementation=False)
 clusterer.fit(data)
-print('HDB', time() - sh)
+print('HDBSCAN (sk-learn): ', time() - sh)
 
 st = time()
 n, dim = data.shape
@@ -110,46 +109,4 @@ mutual_reachability_dist = hdb_c_extension.calc_mutual_reachability_dist(
 c_cluster_labels = graph_extension.calc_mst(n, mutual_reachability_dist,
                                             k_nearest_neighbors_value+1)
 
-print('Time taken', time() - st)
-
-c_cluster_labels = [c_cluster_labels[i] for i in range(n)]
-sk_hdb = Counter(clusterer.labels_)
-my_hdb = Counter(c_cluster_labels)
-
-
-new_sk_hdb = sorted({key: value for key, value in sk_hdb.items()
-                    if key != -1}.values(), reverse=True)
-new_my_hdb = sorted({key: value for key, value in my_hdb.items()
-                    if key != -1}.values(), reverse=True)
-
-
-sk_metric = 0
-my_metric = 0
-
-if args.data in ['mnist', 'iris', 'b_cancer']:
-    orig_labels = Counter(y)
-    new_orig = sorted(orig_labels.values(), reverse=True)
-    ttl = sum(new_orig)
-    for orig, sk, my in zip(new_orig, new_sk_hdb, new_my_hdb):
-        sk_metric += abs(orig - sk)
-        my_metric += abs(orig - my)
-    print('ARI', sk_metric/ttl, my_metric/ttl)
-print(sum(new_sk_hdb)/len(X), sum(new_my_hdb)/len(X))
-
-
-if args.dim == 2:
-    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-
-    axs[0].scatter(X[:, 0], X[:, 1], c=y, cmap='viridis', edgecolors='k', s=50)
-    axs[0].set_title('Original')
-
-    axs[1].scatter(X[:, 0], X[:, 1], c=clusterer.labels_,
-                   cmap='plasma', edgecolors='k', s=50)
-    axs[1].set_title('SK Learn')
-
-    axs[2].scatter(X[:, 0], X[:, 1], c=c_cluster_labels,
-                   cmap='magma', edgecolors='k', s=50)
-    axs[2].set_title('Ours')
-
-    plt.tight_layout()
-    plt.savefig('res.png')
+print('Efficient-HDBSCAN: ', time() - st)
